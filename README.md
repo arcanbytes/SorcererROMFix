@@ -54,19 +54,25 @@ Al guardar, la rutina `0x157BC` recorre una tabla de regiones de RAM (en ROM `0x
 
 ## ⚡ Hipótesis principal: la PCB moderna (mezcla 3,3V / 5V)
 
-Descartado el software (la ROM ES es funcionalmente equivalente a una USA original que jamás tuvo fama de corromper partidas), la sospecha se centra en la placa de la reedición. La inspección visual de la PCB (`Ver1.4 2025`) muestra:
+Descartado el software (la ROM ES es funcionalmente equivalente a una USA original que jamás tuvo fama de corromper partidas), la sospecha se centra en la placa de la reedición. Componentes identificados en la PCB (`Ver1.4 2025`; fotos en [`pcb/`](pcb/)):
 
-- **Flash NOR Spansion serie S29GL** — componente de **3,0-3,6V**, no tolerante a 5V en sus entradas.
-- **SRAM NEC D43256B** — chip clásico de la era de los 5V.
-- El bus de Mega Drive funciona a **5V**; la interfaz entre dominios parece resolverse con **redes de resistencias** (RN1-RN10), no con conversores de nivel activos.
-- Circuito de batería construido con componentes discretos (transistores y diodos); **no se aprecia un IC supervisor** como el que llevaban los cartuchos originales (que bloquea el *chip enable* de la SRAM cuando la alimentación cae por debajo de ~4,5V al encender/apagar).
-- Curiosidad: la placa tiene un footprint serigrafiado **"FRAM"** sin poblar — el diseño contemplaba una variante sin batería.
+| Componente | Referencia | Dato clave |
+|---|---|---|
+| Flash NOR | Spansion **S29GL064N90TFI04** (64 Mbit, 90 ns, ©2006) | Alimentación **2,7-3,6V exclusivamente**; sus entradas no son tolerantes a 5V de forma sostenida |
+| SRAM | NEC **µPD43256BGU-85LL** (32K×8, 85 ns) | Chip de la era de los **5V** (retención a 2V para batería); *date code* `0014` → fabricado en el **año 2000** (stock reciclado/NOS) |
+| Regulador | **AMS1117-3.3** | Crea el raíl de 3,3V de la flash: confirma la mezcla de dominios en la placa |
+| Decodificador | **74HC139D** | Genera los *chip selects* de flash y SRAM |
+| Interfaz de bus | **RN1-RN10**, redes de 4×100Ω (`101`) | La adaptación 5V→3,3V se resuelve con **resistencias en serie**, confiando en el clamping de los diodos de protección internos de la flash (fuera de especificación; práctica habitual en placas repro) |
+| Batería | CR2032 + D2/D3 (diodo-OR) + discretos | **Sin IC supervisor visible** (los cartuchos originales bloquean el `/CE` de la SRAM cuando la alimentación cae de ~4,5V) |
+| Variante | Footprint **"FRAM"** sin poblar (jumper + Q1/R3) | El diseño contemplaba una versión sin batería |
 
 Modos de fallo plausibles con este diseño:
 
-1. **Escrituras espurias en el apagado/encendido**: sin supervisor que aísle la SRAM durante los transitorios de alimentación, pueden colarse escrituras basura. La corrupción aparecería asociada a ciclos de encendido, no al juego en sí.
-2. **Integridad de señal marginal** en el bus compartido 3,3V/5V con divisores resistivos: niveles lógicos al límite, sensibles a temperatura, revisión de consola y tolerancias de componentes (explicaría por qué solo afecta a algunos usuarios).
+1. **Escrituras espurias en el apagado/encendido**: la lógica que genera el `/CE` de la SRAM (74HC139) cuelga del raíl principal, no de la batería. Durante los transitorios de alimentación sus salidas pasan por estados indefinidos mientras la SRAM sigue alimentada por la pila → ventana clásica de escritura basura. La corrupción aparecería asociada a ciclos de encendido, no al juego en sí.
+2. **Integridad de señal marginal** en el bus compartido 5V/3,3V con resistencias en serie: niveles lógicos al límite e inyección de corriente en el raíl de 3,3V, sensibles a temperatura, revisión de consola y tolerancias (explicaría por qué solo afecta a algunos usuarios).
 3. La observación de la comunidad de que el fallo se manifiesta **al guardar en múltiples slots** encaja: más escrituras a SRAM = más exposición a los dos mecanismos anteriores.
+
+> El trazado exacto del circuito de batería/protección (si Q1 llega a gatear el `/CE`) no puede confirmarse solo con fotos; requiere seguir pistas con un polímetro. Es una de las tareas abiertas del plan de validación.
 
 > ⚠️ **Estado: hipótesis pendiente de validación empírica.** El análisis de la ROM es concluyente (la traducción no es la causa), pero la culpabilidad exacta del circuito debe confirmarse con las pruebas de abajo.
 
@@ -78,7 +84,7 @@ Modos de fallo plausibles con este diseño:
 2. **Grupo de control**: la misma ROM ES en flashcart (EverDrive) o emulador durante sesiones largas con muchos guardados. Si ahí nunca se corrompe y en el cartucho físico sí, confirmado.
 3. **Guardado en múltiples slots** en hardware real, reproduciendo el patrón que reporta la comunidad.
 4. **Recopilar archivos `.srm` corruptos sin manipular** (volcados directamente del cartucho): el patrón de daño distingue el origen — bits/bytes sueltos alterados apuntan a fallo eléctrico; estructuras sobreescritas reconocibles apuntarían a software. La herramienta `tools/srm_diagnose.py` de este repositorio automatiza ese análisis.
-5. **Fotografías de alta resolución de la PCB** (ambas caras) para confirmar referencias exactas de los chips y trazar el circuito de protección de la SRAM.
+5. **Trazado del circuito de protección de la SRAM** sobre la PCB real (continuidad con polímetro): confirmar de qué raíl cuelga el 74HC139 y si existe algún gating del `/CE` en el apagado. Las fotos de la placa están en [`pcb/`](pcb/).
 
 ---
 
