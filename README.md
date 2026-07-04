@@ -1,6 +1,6 @@
 # 🧩 SorcererROMFix – Análisis de la corrupción de partidas en Sorcerer's Kingdom (Edición Española)
 
-Este repositorio documenta la investigación técnica sobre los reportes de **corrupción de partidas guardadas** en la reedición física en castellano de *Sorcerer's Kingdom* (Mega Drive), publicada en 2025 (Extreme / Shinyuden / Ratalaika Games). Es un proyecto hermano de [TraysiaROMFix](https://github.com/arcanbytes/TraysiaROMFix), con el que comparte metodología: desensamblado 68000 y auditoría binaria completa de la ROM.
+Este repositorio documenta la investigación técnica sobre los reportes de **corrupción de partidas guardadas** en la reedición física en castellano de *Sorcerer's Kingdom* (Mega Drive), publicada en 2026 (Extreme / Shinyuden / Ratalaika Games). Es un proyecto hermano de [TraysiaROMFix](https://github.com/arcanbytes/TraysiaROMFix), con el que comparte metodología: desensamblado 68000 y auditoría binaria completa de la ROM.
 
 **Conclusión provisional: la ROM traducida queda descartada como causa.** A diferencia de lo ocurrido con Traysia, la auditoría no encuentra ni una sola instrucción de código modificada respecto al original USA. La hipótesis principal se desplaza al **hardware del cartucho moderno** (mezcla de voltajes 3,3V/5V en la PCB), pendiente de validación empírica.
 
@@ -8,7 +8,7 @@ Este repositorio documenta la investigación técnica sobre los reportes de **co
 
 ## 🐛 El problema reportado
 
-Usuarios de la edición física española reportan partidas que se corrompen. El propio juego lo detecta y lo comunica: *Sorcerer's Kingdom* valida sus partidas ("Crónicas") al cargar y muestra mensajes del tipo **"La Crónica N está dañada / está destruida"** cuando la verificación falla. Según los primeros análisis de la comunidad, el fallo se manifiesta especialmente al guardar en múltiples slots.
+Usuarios de la edición física española reportan partidas que se corrompen. El propio juego lo detecta y lo comunica: *Sorcerer's Kingdom* valida sus partidas al cargar y, si la verificación falla, muestra los mensajes **«LA P. N ESTÁ DAÑADA» / «LA P. N ESTÁ DESTRUIDA»** (en el original USA: *"Chronicle N is damaged / disintegrated"* — el juego llama "Crónicas" a las partidas; cadenas en ROM `0x156D8`). Según los primeros análisis de la comunidad, el fallo se manifiesta especialmente al guardar en múltiples slots.
 
 ---
 
@@ -20,7 +20,9 @@ Usuarios de la edición física española reportan partidas que se corrompen. El
 |---|---|---|---|
 | Sorcerer's Kingdom (U) (1992), rev -00 | `8ab847680c35b89e4f7883cb216efdd6` | 1MB | Primera revisión USA |
 | Sorcerer's Kingdom (U) (1993) [!], rev -01 | `587c51be6c60b82514e928f951e730b1` | 1MB | Revisión final USA |
-| Sorcerer's Kingdom (ES) 2025, rev -01 | `52a66fca4c8ac34c7aaa3af057f4d8f6` | 1MB | Reedición en castellano |
+| Sorcerer's Kingdom (ES), rev -01 | `52a66fca4c8ac34c7aaa3af057f4d8f6` | 1MB | Reedición en castellano (2026) |
+
+> ℹ️ El dump que circula como *"Sorcerer's Kingdom (U) (1993) [b1]"* no es una revisión real: la etiqueta `[b1]` significa *bad dump*, y en realidad es la rev. de **1992** (serial `-00`) con 32 bytes de la cabecera manipulados (campos de título). No se usa como referencia de análisis.
 
 La versión española **deriva de la revisión USA de 1993** (48.006 bytes de diferencia, frente a 77.645 respecto a la rev. de 1992). Ambas tienen exactamente 1MB: aquí **no hubo expansión de ROM**, por lo que el defecto encontrado en Traysia (punteros del monitor de depuración reubicados hacia la ventana de SRAM al expandir a 2MB) **no puede darse** en este juego.
 
@@ -46,7 +48,7 @@ El sistema (de Technical Wave, los desarrolladores originales de 1993) usa los 8
 | `$200081` + 8·n | Directorio de Crónicas: registro de 8 bytes de bus por slot con **3 bytes de checksum** |
 | `$200101+` | Datos de las partidas |
 
-Al guardar, la rutina `0x157BC` recorre una tabla de regiones de RAM (en ROM `0x15532`) acumulando **tres sumas de verificación** que se almacenan en el registro del slot; la escritura se verifica por comparación. Al cargar, si las sumas no cuadran, el juego muestra los mensajes de Crónica dañada/destruida. Es decir: **los reportes de los usuarios son el mecanismo de integridad del propio juego detectando datos corruptos**, no un cuelgue descontrolado.
+Al guardar, la rutina `0x157BC` recorre una tabla de regiones de RAM (en ROM `0x15532`) acumulando **tres sumas de verificación** que se almacenan en el registro del slot; la escritura se verifica por comparación. Al cargar, si las sumas no cuadran, el juego muestra los mensajes de partida dañada/destruida citados arriba. Es decir: **los reportes de los usuarios son el mecanismo de integridad del propio juego detectando datos corruptos**, no un cuelgue descontrolado.
 
 ---
 
@@ -87,7 +89,7 @@ Modos de fallo plausibles con este diseño:
 
 ### 📂 Organización de las ROMs
 Coloca las ROMs en `roms/` en la raíz del repositorio:
-* **Sorcerer's Kingdom (ES).md** — reedición en castellano de 2025.
+* **Sorcerer's Kingdom (ES).md** — reedición en castellano de 2026.
 * **Sorcerer's Kingdom (U) (1993) [!].bin** — revisión USA de la que deriva.
 * **Sorcerer's Kingdom (U) (1992).bin** — primera revisión USA (referencia).
 
@@ -106,6 +108,6 @@ Los `.srm` de referencia generados en emulador (RetroArch/BlastEm, RomBundlerDX)
 ## 🧠 Créditos y Licencia
 
 - Investigación, análisis y documentación por **@Arcanbytes**.
-- Gracias a la comunidad (TodoRPG, Luis y los usuarios afectados) por los reportes y la difusión.
+- Gracias a la comunidad (TodoRPG, Luis Shinyuden y los usuarios afectados) por los reportes y la difusión.
 
 Licencia: MIT – puedes usar, modificar y compartir este contenido libremente.
