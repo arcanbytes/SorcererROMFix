@@ -24,6 +24,8 @@ Usuarios de la edición física española reportan partidas que se corrompen. El
 
 > ℹ️ El dump que circula como *"Sorcerer's Kingdom (U) (1993) [b1]"* no es una revisión real: la etiqueta `[b1]` significa *bad dump*, y en realidad es la rev. de **1992** (serial `-00`) con 32 bytes de la cabecera manipulados (campos de título). No se usa como referencia de análisis.
 
+> ✅ **Verificación del cartucho físico**: un volcado directo de la flash del cartucho (lector OSCR de sanni, HW5 V15.5) resultó **idéntico byte a byte** a la ROM ES analizada (MD5 `52a66fca...`, CRC32 `D6012842`, checksum interno OK). Esto descarta corrupción en la grabación de fábrica y confirma que todas las conclusiones de esta auditoría aplican al cartucho real.
+
 La versión española **deriva de la revisión USA de 1993** (48.006 bytes de diferencia, frente a 77.645 respecto a la rev. de 1992). Ambas tienen exactamente 1MB: aquí **no hubo expansión de ROM**, por lo que el defecto encontrado en Traysia (punteros del monitor de depuración reubicados hacia la ventana de SRAM al expandir a 2MB) **no puede darse** en este juego.
 
 ### Qué cambia la traducción (los 48.006 bytes, clasificados)
