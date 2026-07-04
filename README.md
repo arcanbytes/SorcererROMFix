@@ -76,6 +76,8 @@ Modos de fallo plausibles con este diseño:
 
 > El trazado exacto del circuito de batería/protección (si Q1 llega a gatear el `/CE`) no puede confirmarse solo con fotos; requiere seguir pistas con un polímetro. Es una de las tareas abiertas del plan de validación.
 
+➡️ **[RECOMENDACIONES.md](RECOMENDACIONES.md)** — propuestas de diseño para futuras PCB y pautas de mitigación para los usuarios del cartucho actual.
+
 > ⚠️ **Estado: hipótesis pendiente de validación empírica.** El análisis de la ROM es concluyente (la traducción no es la causa), pero la culpabilidad exacta del circuito debe confirmarse con las pruebas de abajo.
 
 ---
